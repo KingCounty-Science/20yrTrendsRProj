@@ -3,15 +3,15 @@ library(reshape2)
 library(dplyr)
 library(lme4)
 library(lmerTest)
-library(MuMIn)
+# library(MuMIn)
 library(ggpmisc)
 library(grid)
 library(gridExtra)
 library(Rmisc)
 library(plyr)
-library(wlRd)
+# library(wlRd)
 library(stringr)
-library(Kendall)
+# library(Kendall)
 library(knitr)
 library(plotly)
 library(labeling)
@@ -38,12 +38,14 @@ lulc<-read.csv("NLCD_LULC_2001-2019.csv", header = T)
 
 setwd(here::here())
 setwd("./inputs/NLCD 2001to2019 183Basins 181Buffers")
-imp<-openxlsx::read.xlsx("Stats_PctDev_Basins_2001to2019.xlsx", sheet = 1, rows = c(7:190))
+## commented out the following line and replaced with similar line 9/24/24 for Freswater Science Manuscript submission
+# imp<-openxlsx::read.xlsx("Stats_PctDev_Basins_2001to2019.xlsx", sheet = 1, rows = c(7:190))
+imp<-openxlsx::read.xlsx("Copy of Stats_PctDev_Basins_2001to2021.xlsx", sheet = 1, rows = c(7:190))
 lulc<-subset(lulc, lulc$Name!="09SOO1209")
 lulc<-merge(summ, lulc, by.x='Site.Code', by.y='Name')
 imp<-subset(imp, imp$Name!="09SOO1209")
 lulc<-merge(lulc, imp, by.x='Site.Code', by.y='Name')
-lulc$change_imp<-lulc$PctDev_Basins_2019-lulc$PctDev_Basins_2001
+lulc$change_imp<-lulc$PctDev_Basins_2021-lulc$PctDev_Basins_2001
 lulc$change_urb<-lulc$per_Urban_2019 -lulc$per_Urban_2001
 
 summary(lulc$change_imp)
@@ -51,8 +53,12 @@ summary(lulc$Change_per_Urban)
 
 setwd(here::here())
 setwd("./outputs")
-imp2<-read.csv("NLCD_basin_impervious.csv")
-imp_mean<-ddply(imp2, .(Name), summarize, meanImp=mean(PctDev_Basins_))
+## commented out the following three lines and replaced with similar lines 9/24/24 for Freswater Science Manuscript submission
+# imp2<-read.csv("NLCD_basin_impervious.csv")
+# imp_mean<-ddply(imp2, .(Name), summarize, meanImp=mean(PctDev_Basins_))
+# lulc<-merge(lulc, imp_mean, by.x='Site.Code', by.y='Name')
+imp2<-reshape2::melt(imp, id.vars=c("Name"), variable.name="PctDev_Basins_")
+imp_mean<-ddply(imp2, .(Name), summarize, meanImp=mean(value))
 lulc<-merge(lulc, imp_mean, by.x='Site.Code', by.y='Name')
 
 # lulc$change_imp<-lulc$imp16_per-lulc$imp01_per
@@ -157,9 +163,11 @@ ggsave("LULC_plot_Change_Slope.png", plot=LULC_plot, width=6, height=3, units="i
 
 LULC_plot<-ggplot(lulc, aes(x=change_imp, y=Avg_MKSlope_Overall.Score))+
   geom_point(aes(shape=MK_trend,  fill=MK_trend)) +
+  stat_smooth(method = "lm", formula = y ~ x, color="black")+
+  stat_poly_eq(formula = y ~ x, rr.digits = 2, coef.digits = 3,label.x=5, label.y=-1, position="identity", color = "black", aes(label = paste(..eq.label.., ..adj.rr.label.., sep = "*\", \"*")), parse = TRUE)+
   scale_shape_manual(values=c(21,24, 25), breaks=c("none","positive", "negative"), labels=c("non-significant", "increasing", "decreasing"))+
   scale_fill_manual(values=c("white", "darkgray", "black"),breaks=c("none","positive", "negative"), labels=c("non-significant", "increasing", "decreasing"))+
-  geom_line(y=0) +
+  geom_line(y=0, lty="dashed") +
   theme_bw()+
   theme(text=element_text(family="sans"), panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"), axis.text=element_text(colour="black"))+
@@ -168,7 +176,7 @@ LULC_plot<-ggplot(lulc, aes(x=change_imp, y=Avg_MKSlope_Overall.Score))+
   labs(shape="Trend Direction", fill="Trend Direction")+
   guides(fill = "none", shape="none") 
 
-ggsave("LULC_plot_Change_Slope_FWS.tiff", plot=LULC_plot, width=8.4, height=6, units="cm", dpi=600)
+ggsave("LULC_plot_Change_Slope_FWS_fixed.tiff", plot=LULC_plot, width=8.4, height=6, units="cm", dpi=600)
 
 ################################
 
