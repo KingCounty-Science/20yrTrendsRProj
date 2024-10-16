@@ -34,7 +34,7 @@ hist_WWBF<-read.csv("02-16_WW_BF.csv")
 hist_riffle<-read.csv("02-16_Riffle.csv")
 # peb512<-read.csv("Wolman_05-12.csv")##done in BF width
 # peb23<-read.csv("Wolman_02-03.csv")##done in BF width
-peb0202<-read.xlsx("Wolman_2002-2003.xlsx", sheet = 2)##done in BF width
+peb0202<-openxlsx::read.xlsx("Wolman_2002-2003.xlsx", sheet = 2, startRow = 1)##done in BF width
 peb0512<-read.xlsx("tblWolman_2005-2012.xlsx", sheet = 2)##done in BF width
 
 setwd(here::here())
@@ -108,6 +108,8 @@ Wolm<-rbind(Wolm, w)
 ggplot(Wolm, aes(x=Year, y=D50, group=Year))+geom_boxplot()
 rm(Peb, peb1316, peb23, peb512, w, x, y, z, SC, D)
 sum(is.na(Wolm$D50))
+
+write.csv(Wolm, "D50_2002_2021.csv")
 ################
 names(hist_RD)
 hist_RD$SiteName<-str_sub(str_remove(hist_RD$SAMPLE_NUMBER, "_R"), 1, nchar(str_remove(hist_RD$SAMPLE_NUMBER, "_R"))-3)

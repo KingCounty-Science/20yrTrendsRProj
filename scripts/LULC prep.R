@@ -7,7 +7,7 @@ categories<-c(  "22"="Urban", "23"="Urban", "24"="Urban", "21"="Open Spaces Deve
             "11"="Open Water", 
             "31"="Barren Land", "12"="Perennial Snow/Ice")
 
-maxYear<-2019#max year to consider for %LU change
+maxYear<-2021#max year to consider for %LU change
 minYear<-2001
 # if(!exists("LULCBind", mode="function")) source ("PSSB_utilites.r")
 # lulc<-LULCBind(file.p, categ, minYear, maxYear)
@@ -42,7 +42,7 @@ file.path<-"./NLCD 2001to2019 183Basins 181Buffers"
   res_basin<-subset(res, type=="Basins")
   
   
-  
+  res_basin$Acres[is.na(res_basin$Acres)]<-0
   
   res2<-reshape2::dcast(res_basin, Name~CODE2+year, sum, value.var = "Acres")
   res3<-reshape2::dcast(res_basin, Name~year, sum, value.var="Acres")
@@ -68,7 +68,7 @@ names(res4)
 
     setwd(here::here())
     setwd("./outputs")
-write.csv(res4, paste0("/NLCD_LULC_2001-2019.csv"))
+write.csv(res4, paste0("NLCD_LULC_2001-2021.csv"))
 basins<-res4
 
 res2<-reshape2::dcast(res_buff, Name~CODE2+year, sum, value.var = "Acres")

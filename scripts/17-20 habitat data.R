@@ -12,7 +12,23 @@ library(sf)
 
 con <- dbConnect(odbc(), "bibihabitat")
 dbListTables(con)
-Sample<-dbGetQuery(con,' select * from SAMPLE')
+dbListTables(con)
+column.types <- dbGetQuery(con, "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='SAMPLE'")
+ct <- column.types %>%
+  mutate(cml = case_when(
+    is.na(CHARACTER_MAXIMUM_LENGTH) ~ 10,
+    CHARACTER_MAXIMUM_LENGTH == -1 ~ 100000,
+    TRUE ~ as.double(CHARACTER_MAXIMUM_LENGTH)
+  )
+  ) %>%
+  arrange(cml) %>%
+  pull(COLUMN_NAME)
+
+fields <- paste(ct, collapse=", ")
+query <- paste("SELECT", fields, "FROM SAMPLE")
+
+Sample<-dbGetQuery(con, query)
+# Sample<-dbGetQuery(con,' select * from SAMPLE')
 Sample$IsReplicateSample[Sample$SiteName=="08BEA3747"&Sample$OBJECTID=="16804"]<-"Yes"##Didn't mark it as replicate in the form
 Sample$IsReplicateSample[Sample$SiteName=="08BEA3312"&Sample$OBJECTID=="42405"]<-"Yes"## was sampled twice in 2021, marking this as a replicate.
 Sample$year<-year(Sample$SampleDate)

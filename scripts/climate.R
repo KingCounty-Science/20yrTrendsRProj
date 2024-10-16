@@ -322,6 +322,15 @@ KC_scores<-subset(KC_scores, Tot_Abund>=450)
 KC_scores$Visit.Date<-as.Date(KC_scores$Visit.Date, "%Y-%m-%d")
 samples<-subset(KC_scores, select=c(Sample.Code,Site.Code, Visit.Date)) ### make sure to fix 09DUW0277/05, incorrectly given site as 08BEA3312 in PSSB and B-IBI results
 samples<-inner_join(samples, DD50, by=c("Site.Code"="Site", "Visit.Date"="time2"))
+##added this next section to get change in annual daily mean air temps for FWS publication##
+annualdailymean_site<-ddply(samples, .(Site.Code, Year), summarize, annualdailymean=mean(tmean))
+annualdailymean_site$annualdailymean<-annualdailymean_site$annualdailymean-273.15
+ggplot(annualdailymean_site, aes(x=Year, y=annualdailymean, group=Year))+geom_boxplot()
+l=unique(c(as.character(annualdailymean_site$Site.Code)))
+annualdailymean_site$Site.Number<-as.numeric(factor(annualdailymean_site$Site.Code, levels=l))
+annualdailymean_site$Year<-as.numeric(paste0(annualdailymean_site$Year))
+with(annualdailymean_site, rkt(date = Year, y = annualdailymean, block = Site.Number, correct = FALSE, rep="a"))
+##
 setdiff(KC_scores$Site.Code, samples$Site.Code)
 samples<-subset(samples, select=c(Sample.Code, Site.Code, Visit.Date, Year, x50,DD, wtr_year))
 write.csv(samples, "DegreeDaysabove10C.csv")
