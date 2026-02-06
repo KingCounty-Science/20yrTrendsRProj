@@ -29,7 +29,7 @@ excel_sheets("PSSB_download_fourways_2002_2024.xlsx")
 # Read in the data,Just pebble and canopy (may change in the future)
 PSSB_4ways <-read_excel("PSSB_download_fourways_2002_2024.xlsx", 
                         sheet = "DATA_USE", 
-                        .name_repair = make_clean_names) # skips the first line which does NOT contain data
+                        .name_repair = make_clean_names) 
 # Removes the file from my working directory. 
 file.remove("PSSB_download_fourways_2002_2024.xlsx")
 
