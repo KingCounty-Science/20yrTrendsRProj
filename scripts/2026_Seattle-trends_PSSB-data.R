@@ -8,7 +8,8 @@ library(Microsoft365R) #for reading file from sharepoint
 library(readxl) #for reading excel file
 library(janitor) #clean up name
 library(tidyverse) #for data tidying and wrangling
-library(rkt) #for Mann Kendall
+library(rkt) #for Mann Kendall of the overall data sets
+library(EnvStats) #for site trends script
 
 ## read in Kate's list of Seattle Sites
 
@@ -50,3 +51,44 @@ results<-  bigdf |>
 
 #write out the results. 
 write.csv(results, "Site_Trends_4ways_2002-2021_20260205.csv")
+
+
+### evaluate overall trend, blocked by site, no pre-filtering for low number of years ####
+PSSB_4ways$site_code_factor <- as.numeric(as_factor(PSSB_4ways$site_code)) # the rkt script requires block be numeric
+
+PSSB_groups<-PSSB_4ways |> group_by(download_specs) #review the groups of data
+
+#separate out the groups into small dataframes
+Coarse_Mapped_FullyRandom<-group_split(PSSB_groups)[[1]]
+Coarse_NotMapped_SemiRan<-group_split(PSSB_groups)[[2]]
+Meta_Mapped_FullyRandom  <-group_split(PSSB_groups)[[3]]
+Meta_NotMapped_SemiRan <-group_split(PSSB_groups)[[4]]
+
+#test each dataframe for regional trend blocked by site.
+mk_CMF<-rkt(date= Coarse_Mapped_FullyRandom$year, 
+            y = Coarse_Mapped_FullyRandom$overall_score, 
+            block = Coarse_Mapped_FullyRandom$site_code_factor,
+            correct= F,
+            rep = "a")
+mk_CMF
+
+mk_CNS <-rkt(date= Coarse_NotMapped_SemiRan$year, 
+             y = Coarse_NotMapped_SemiRan$overall_score, 
+             block = Coarse_NotMapped_SemiRan$site_code_factor,
+             correct= F,
+             rep = "a")
+mk_CNS
+
+mk_MMF<-rkt(date= Meta_Mapped_FullyRandom$year, 
+            y = Meta_Mapped_FullyRandom$overall_score, 
+            block = Meta_Mapped_FullyRandom$site_code_factor,
+            correct= F,
+            rep = "a")
+mk_MMF
+
+mk_MNS <-rkt(date= Meta_NotMapped_SemiRan$year, 
+             y = Meta_NotMapped_SemiRan$overall_score, 
+             block = Meta_NotMapped_SemiRan$site_code_factor,
+             correct= F,
+             rep = "a")
+mk_MNS
