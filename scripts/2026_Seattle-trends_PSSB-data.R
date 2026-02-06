@@ -13,9 +13,9 @@ library(EnvStats) #for site trends script
 
 ## read in Kate's list of Seattle Sites
 
-##read in the dataset Kate sent for comparison (2026-01-2029)
-#### Load ISP site pebble data from Microsoft Teams/Sharepoint ####
-site <- get_sharepoint_site(site_url = "[saved in local environment]") #this project is public
+##read in the dataset Kate sent for comparison (2026-01-2029) from Microsoft Teams/Sharepoint ####
+##I have the url saved locally because this project is public.
+site <- get_sharepoint_site(site_url = "[saved in local environment]") #this project is public, this line requires knowledge of the url for science sharpoint.
 
 # default is the document library
 drv <- site$get_drive("LSSG Files")
@@ -26,7 +26,7 @@ drv$download_file("Freshwater/Streams/Freshwater Macroinvertebrate Program/Contr
 # Review the sheet names in order to select the correct one.  
 excel_sheets("PSSB_download_fourways_2002_2024.xlsx")
 
-# Read in the data,Just pebble and canopy (may change in the future)
+# Read in the data,from the correct sheet
 PSSB_4ways <-read_excel("PSSB_download_fourways_2002_2024.xlsx", 
                         sheet = "DATA_USE", 
                         .name_repair = make_clean_names) 
@@ -35,30 +35,34 @@ file.remove("PSSB_download_fourways_2002_2024.xlsx")
 
 #Determine which sites have more than 2 years of data.
 enough.years<-PSSB_4ways |> group_by(download_specs, site_code) |> count(site_code) |> filter(n >2) |> select(site_code) |> pull()
-bigdf <- PSSB_4ways |> filter(site_code %in% enough.years) #filter the data to include only sites with enough years
+
+#filter the data to include only sites with enough years
+bigdf <- PSSB_4ways |> filter(site_code %in% enough.years) 
 
 results<-  bigdf |> 
   group_by(download_specs, site_code) |> #group the data by download style and site
   mutate(mk.tau=kendallTrendTest(overall_score ~ year)$estimate[1]) |> #for each download style and site, calculate mk metrics (tau)
   mutate(mk.Sen=kendallTrendTest(overall_score ~ year)$estimate[2]) |>  #Sen
   mutate(mk.pval=kendallTrendTest(overall_score ~ year)$p.value) |> # pvalue
-  select(site_code, download_specs, mk.tau,mk.Sen, mk.pval)  |> #then simplify so that each site and download has only one row of data
-  unique() |> 
-  mutate(mk.trend = if(mk.pval < 0.05 & mk.tau < 0){"negative"} #add a column that evaluates if it is negative
-         else if(mk.pval < 0.05 & mk.tau > 0){"positive"} #positive
+  select(site_code, download_specs, mk.tau,mk.Sen, mk.pval)  |> #then keep just site code and the mk stats.
+  unique() |> #then simplify so that each site and download has only one row of data
+  mutate(mk.trend = if(mk.pval < 0.05 & mk.tau < 0){"negative"} #add a column that evaluates if it is negative...
+         else if(mk.pval < 0.05 & mk.tau > 0){"positive"} #positive...
          else{"none"}) |> #or neither
-  pivot_wider(names_from = download_specs, values_from = c(mk.tau, mk.Sen, mk.pval, mk.trend)) #then pivot the data to WIDE format for comparison
+  pivot_wider(names_from = download_specs, values_from = c(mk.tau, mk.Sen, mk.pval, mk.trend)) #then pivot the data to WIDE format for easy comparison
 
-#write out the results. 
+#write out the results to my local environment
 write.csv(results, "Site_Trends_4ways_2002-2021_20260205.csv")
 
 
 ### evaluate overall trend, blocked by site, no pre-filtering for low number of years ####
 PSSB_4ways$site_code_factor <- as.numeric(as_factor(PSSB_4ways$site_code)) # the rkt script requires block be numeric
 
-PSSB_groups<-PSSB_4ways |> group_by(download_specs) #review the groups of data
+### Prepare for regional mann kendall blocked by site. ####
 
-#separate out the groups into small dataframes
+PSSB_groups<-PSSB_4ways |> group_by(download_specs) #separate the data set into the appropriet groups of data
+
+#separate out the groups into small individual dataframes
 Coarse_Mapped_FullyRandom<-group_split(PSSB_groups)[[1]]
 Coarse_NotMapped_SemiRan<-group_split(PSSB_groups)[[2]]
 Meta_Mapped_FullyRandom  <-group_split(PSSB_groups)[[3]]
