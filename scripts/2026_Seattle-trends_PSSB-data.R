@@ -96,3 +96,27 @@ mk_MNS <-rkt(date= Meta_NotMapped_SemiRan$year,
              correct= F,
              rep = "a")
 mk_MNS
+
+
+##create data visualizations to compare outcomes. ####
+
+site_trends <- read_csv("Site_Trends_4ways_2002-2021_20260205.csv")
+
+##Idea #1 - This is a pairwise comparison of trend outcome - If we have four ways, we'll have 6 comparisons. Is that what we want?
+site_trends |> 
+  group_by(mk.trend_Meta_NotMapped_SemiRan, mk.trend_Meta_Mapped_FullyRandom) |> count() |> 
+  ggplot(aes(x = mk.trend_Meta_NotMapped_SemiRan, y = mk.trend_Meta_Mapped_FullyRandom, fill = n)) +
+  geom_tile() +
+  geom_label(aes(label = n), color = "black", fill = "lightblue", size = 5) +  # Add count inside tiles
+  scale_fill_distiller(palette = "YlGnBu",direction = 1) +
+  labs(
+    title = "trend similarity",
+    x = "mk.trend_Meta_NotMapped_SemiRan",
+    y = "mk.trend_Meta_Mapped_FullyRandom",
+    fill = "count of sites"
+  ) +
+  theme_minimal()
+
+
+
+
