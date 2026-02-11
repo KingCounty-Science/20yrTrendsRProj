@@ -54,11 +54,10 @@ results<-  bigdf |>
 #write out the results to my local environment
 write.csv(results, "Site_Trends_4ways_2002-2021_20260205.csv")
 
+### Prepare for regional mann kendall blocked by site. ####
 
 ### evaluate overall trend, blocked by site, no pre-filtering for low number of years ####
 PSSB_4ways$site_code_factor <- as.numeric(as_factor(PSSB_4ways$site_code)) # the rkt script requires block be numeric
-
-### Prepare for regional mann kendall blocked by site. ####
 
 PSSB_groups<-PSSB_4ways |> group_by(download_specs) #separate the data set into the appropriet groups of data
 
